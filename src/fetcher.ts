@@ -1,4 +1,4 @@
-import { JSDOM } from 'jsdom';
+import { parseHTML } from 'linkedom';
 import { Defuddle } from 'defuddle/node';
 
 export interface FetchedPage {
@@ -12,22 +12,23 @@ export interface FetchedPage {
   defuddleSuccess: boolean;
 }
 
+function stripDomain(host: string): string {
+  const parts = host.split('.');
+  if (parts.length > 2) return parts[parts.length - 2];
+  return parts[0];
+}
+
 function extractAuthorFromUrl(url: string): string {
   try {
     const u = new URL(url);
     const host = u.hostname.replace(/^www\./, '');
     const parts = u.pathname.split('/').filter(Boolean);
 
-    if (host === 'github.com' && parts.length >= 1) {
-      return parts[0];
-    }
-    if (host.includes('wikipedia')) {
-      return 'Wikipedia';
-    }
-    if (host.includes('medium.com') && parts.length >= 1) {
-      return `@${parts[0]}`;
-    }
-    return host;
+    if (host === 'github.com' && parts.length >= 1) return parts[0];
+    if (host.endsWith('wikipedia.org')) return 'Wikipedia';
+    if (host.includes('medium.com') && parts.length >= 1) return `@${parts[0]}`;
+
+    return stripDomain(host);
   } catch {
     return '';
   }
@@ -50,28 +51,24 @@ export async function fetchPage(url: string): Promise<FetchedPage> {
   let defuddleMarkdown = '';
 
   try {
-    const origError = console.error;
-    console.error = () => {};
-    try {
-      const dom = new JSDOM(rawHtml, { url });
-      const result = await Defuddle(dom.window.document, url, { separateMarkdown: true });
-      defuddleContent = result.content ?? '';
-      defuddleMarkdown = (result as { contentMarkdown?: string }).contentMarkdown ?? '';
-      defuddleTitle = result.title ?? '';
-      defuddleDescription = result.description ?? '';
-      defuddleLanguage = result.language ?? 'en';
-      defuddleAuthor = result.author ?? '';
-    } finally {
-      console.error = origError;
-    }
+    const { document } = parseHTML(rawHtml);
+    const result = await Defuddle(document, url, { separateMarkdown: true });
+    defuddleContent = result.content ?? '';
+    defuddleMarkdown = (result as { contentMarkdown?: string }).contentMarkdown ?? '';
+    defuddleTitle = result.title ?? '';
+    defuddleDescription = result.description ?? '';
+    defuddleLanguage = result.language ?? 'en';
+    defuddleAuthor = result.author ?? '';
   } catch {
-    // defuddle may fail on some pages (e.g. :has() unsupported by jsdom)
+    // defuddle may fail on some pages
   }
 
   const defuddleSuccess = !!(defuddleContent && defuddleContent.length < rawHtml.length * 0.6);
 
   if (!defuddleAuthor) {
     defuddleAuthor = extractAuthorFromUrl(url);
+  } else if (defuddleAuthor.includes('.')) {
+    defuddleAuthor = stripDomain(defuddleAuthor);
   }
 
   return {

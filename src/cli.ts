@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { writeFileSync } from 'fs';
+import { parseHTML as parseLinkedom } from 'linkedom';
 import { fetchPage } from './fetcher.js';
 import { parseHtml } from './parser.js';
 import { scoreKeywords } from './scorer.js';
@@ -15,6 +16,9 @@ function parseArgs() {
   let maxTags = 10;
   let format: Format = 'text';
   let outputFile = '';
+  let cleanMd = false;
+  let showRaw = false;
+  let showMain = false;
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
@@ -27,12 +31,18 @@ function parseArgs() {
       format = 'markdown';
     } else if (arg === '-f' || arg === '--frontmatter') {
       format = 'frontmatter';
+    } else if (arg === '--raw-html') {
+      showRaw = true;
+    } else if (arg === '--main-html') {
+      showMain = true;
     } else if (arg === '--tag') {
       format = 'text';
     } else if (arg === '-t' || arg === '--tags') {
       i++;
       const val = parseInt(args[i], 10);
       if (!isNaN(val) && val > 0) maxTags = val;
+    } else if (arg === '--clean-md' || arg === '-c') {
+      cleanMd = true;
     } else if (arg === '-o' || arg === '--output') {
       i++;
       if (args[i] && !args[i].startsWith('-')) outputFile = args[i];
@@ -46,7 +56,7 @@ function parseArgs() {
     process.exit(1);
   }
 
-  return { url, maxTags, format, outputFile };
+  return { url, maxTags, format, outputFile, cleanMd, showRaw, showMain };
 }
 
 function printHelp() {
@@ -59,6 +69,8 @@ Usage:
   keyscan <url> -m                      Markdown body
   keyscan <url> -f                      Full .md (frontmatter + body)
   keyscan <url> --tags 20               Top 20 tags (default: 10)
+  keyscan <url> --raw-html              Display raw HTML
+  keyscan <url> --main-html             Display main content HTML
   keyscan <url> -j --tags 20            Top 20 as JSON
   keyscan <url> -f -o article.md        Write .md to file
 
@@ -70,16 +82,31 @@ Format flags (mutually exclusive):
 
 Options:
   --tags <N>        Number of tags (default: 10)
+  --raw-html        Display raw HTML output
+  --main-html       Display main content HTML
   -o, --output <f>  Write to file instead of stdout
   -h, --help        Show this help
 `);
 }
 
 async function main() {
-  const { url, maxTags, format, outputFile } = parseArgs();
+  const { url, maxTags, format, outputFile, cleanMd, showRaw, showMain } = parseArgs();
 
   try {
     const page = await fetchPage(url);
+    
+    if (showRaw) {
+      console.log(page.rawHtml);
+      return;
+    }
+    
+    if (showMain) {
+      const { document } = parseLinkedom(page.rawHtml);
+      const contentEl = document.querySelector('article,[role="main"],main,.post-content,.entry-content,.article-body') ?? document.body;
+      console.log(contentEl.innerHTML);
+      return;
+    }
+
     const { sections, bodyText } = parseHtml(page.rawHtml, page.defuddleContent);
     const { keywords, totalWords } = scoreKeywords(sections, bodyText, page.language, maxTags);
 

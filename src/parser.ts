@@ -1,8 +1,12 @@
-import { JSDOM } from 'jsdom';
+import { parseHTML } from 'linkedom';
 import type { Sections } from './elements/types.js';
 
+function qsa(doc: Document | Element, sel: string): Element[] {
+  return Array.from(doc.querySelectorAll(sel));
+}
+
 function getTextNodes(doc: Document, sel: string): string[] {
-  return [...doc.querySelectorAll(sel)].map(el => el.textContent?.trim() || '').filter(Boolean);
+  return qsa(doc, sel).map(el => el.textContent?.trim() || '').filter(Boolean);
 }
 
 function getMetaContent(doc: Document, selector: string): string[] {
@@ -12,7 +16,7 @@ function getMetaContent(doc: Document, selector: string): string[] {
 }
 
 function extractAnchorTexts(root: Document | Element): string[] {
-  return [...root.querySelectorAll('a')]
+  return qsa(root, 'a')
     .map(a => a.textContent?.trim() || '')
     .filter(t => t.length > 2 && t.length < 80);
 }
@@ -45,7 +49,7 @@ function extractSectionsFromDoc(doc: Document): Sections {
 }
 
 function extractFirstParagraph(doc: Document): string[] {
-  const paragraphs = doc.querySelectorAll('p');
+  const paragraphs = qsa(doc, 'p');
   for (const p of paragraphs) {
     const text = p.textContent?.trim() || '';
     if (text.split(/\s+/).length >= 8) {
@@ -80,38 +84,29 @@ export interface ParsedPage {
 }
 
 export function parseHtml(rawHtml: string, defuddleContent?: string): ParsedPage {
-  const dom = new JSDOM(rawHtml);
-  const doc = dom.window.document;
+  const { document: doc } = parseHTML(rawHtml);
 
   const sections = extractSectionsFromDoc(doc);
 
-  doc.querySelectorAll('nav,footer,header,aside,script,style,[role="navigation"],[role="banner"]')
-    .forEach(el => el.remove());
+  const boilerplate = qsa(doc, 'nav,footer,header,aside,script,style,[role="navigation"],[role="banner"]');
+  for (const el of boilerplate) {
+    try { el.remove(); } catch { /* some DOMs may not support remove() */ }
+  }
 
   sections.first_para = extractFirstParagraph(doc);
 
-  const imgAlts = [...doc.querySelectorAll('img[alt]')]
+  const imgAlts = qsa(doc, 'img[alt]')
     .map(img => img.getAttribute('alt')?.trim() || '')
     .filter(t => t.length > 2 && t.length < 200);
   if (imgAlts.length > 0) sections.img_alt = imgAlts;
 
-  const figcaptions = [...doc.querySelectorAll('figcaption')]
+  const figcaptions = qsa(doc, 'figcaption')
     .map(el => el.textContent?.trim() || '')
     .filter(Boolean);
   if (figcaptions.length > 0) sections.figcaption = figcaptions;
 
-  // Use defuddle content for body (cleaner article text), fall back to raw DOM body
-  if (defuddleContent) {
-    const defuddleDom = new JSDOM(defuddleContent);
-    const defuddleDoc = defuddleDom.window.document;
-    const contentEl = defuddleDoc.querySelector('article,[role="main"],main,.post-content,.entry-content,.article-body') ?? defuddleDoc.body;
-    const rawText = contentEl.textContent || '';
-    const bodyText = cleanBodyText(rawText);
-    return { sections, bodyText };
-  }
-
-  const contentEl = doc.querySelector('article,[role="main"],main,.post-content,.entry-content,.article-body') ?? doc.body;
-  const rawText = contentEl.textContent || '';
+  const contentEl = doc.querySelector('article,[role="main"],main,.post-content,.entry-content,.article-body') ?? (doc as any).body;
+  const rawText = contentEl?.textContent || '';
   const bodyText = cleanBodyText(rawText);
 
   return { sections, bodyText };
