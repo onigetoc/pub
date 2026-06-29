@@ -21,6 +21,9 @@ export interface KeyscanResult {
   title: string;
   description: string;
   language: string;
+  url?: string;
+  author?: string;
+  contentMarkdown?: string;
 }
 
 export const WEIGHTS: Record<string, number> = {
