@@ -1,0 +1,303 @@
+{
+  "content": "<article><blockquote> <p dir=\"auto\">de·fud·dle /diˈfʌdl/ <em>transitive verb</em> <br> to remove unnecessary elements from a web page, and make it easily readable.</p> </blockquote> <p dir=\"auto\"><strong>Beware! Defuddle is very much a work in progress!</strong></p> <p dir=\"auto\">Defuddle extracts the main content from web pages. It cleans up web pages by removing clutter like comments, sidebars, headers, footers, and other non-essential elements, leaving only the primary content.</p> <H2 dir=\"auto\">Overview</H2> <p dir=\"auto\">Defuddle takes a URL or HTML, finds the main content, and returns cleaned HTML or Markdown. Defuddle was created for the browser extension <a href=\"https://github.com/obsidianmd/obsidian-clipper\">Obsidian Web Clipper</a>, but it is designed to run in any environment.</p> <p dir=\"auto\">Defuddle can be used as a replacement for <a href=\"https://github.com/mozilla/readability\">Mozilla Readability</a> with a few differences:</p> <ul dir=\"auto\"> <li>More forgiving, removes fewer uncertain elements.</li> <li>Provides a consistent output for footnotes, math, code blocks, etc.</li> <li>Uses a page's mobile styles to guess at unnecessary elements.</li> <li>Extracts more metadata from the page, including schema.org data.</li> </ul> <H2 dir=\"auto\">Usage</H2> <H3 dir=\"auto\">Browser</H3> <pre><code class=\"language-javascript\" data-lang=\"javascript\">import Defuddle from 'defuddle';\n\n// Parse the current document\nconst defuddle = new Defuddle(document);\nconst result = defuddle.parse();\n\n// Access the content and metadata\nconsole.log(result.content);\nconsole.log(result.title);\nconsole.log(result.);</code></pre> <H3 dir=\"auto\">Node.js</H3> <p dir=\"auto\"><code>defuddle/node</code> accepts a DOM <code>Document</code> from any implementation (JSDOM, linkedom, happy-dom, etc.).</p> <pre><code class=\"language-javascript\" data-lang=\"javascript\">import { parseHTML } from 'linkedom';\nimport { Defuddle } from 'defuddle/node';\n\nconst { document } = parseHTML(html);\nconst result = await Defuddle(document, 'https://example.com/article', {\n  markdown: true\n});\n\nconsole.log(result.content);\nconsole.log(result.title);\nconsole.log(result.);</code></pre> <p dir=\"auto\">Or with JSDOM:</p> <pre><code class=\"language-javascript\" data-lang=\"javascript\">import { JSDOM } from 'jsdom';\nimport { Defuddle } from 'defuddle/node';\n\nconst dom = new JSDOM(html, { url: 'https://example.com/article' });\nconst result = await Defuddle(dom.window.document, 'https://example.com/article');</code></pre> <p dir=\"auto\"><em>Note: for <code>defuddle/node</code> to import properly, the module format in your <code>package.json</code> has to be set to <code>{ \"type\": \"module\" }</code></em></p> <H3 dir=\"auto\">CLI</H3> <p dir=\"auto\">Defuddle includes a command-line interface for parsing web pages directly from the terminal. You can run it with <code>npx</code> or <a href=\"#cli-installation\">install it globally</a>. The CLI accepts a file path, a URL, or HTML piped over stdin.</p> <pre><code class=\"language-bash\" data-lang=\"bash\"># Parse a local HTML file\nnpx defuddle parse page.html\n\n# Parse a URL\nnpx defuddle parse https://example.com/article\n\n# Parse HTML from stdin\ncat page.html | npx defuddle parse\n\n# Parse fetched HTML from stdin as markdown\ncurl -L https://stephango.com/saw | npx defuddle parse --markdown\n\n# Output as markdown\nnpx defuddle parse page.html --markdown\n\n# Output as JSON with metadata\nnpx defuddle parse page.html --json\n\n# Extract a specific property\nnpx defuddle parse page.html --property title\n\n# Save output to a file\nnpx defuddle parse page.html --output result.html\n\n# Enable debug mode\nnpx defuddle parse page.html --debug\n\n# Use a custom User-Agent (helps with sites that return 403 to the default UA)\nnpx defuddle parse https://example.com/article --user-agent \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15\"</code></pre> <H4 dir=\"auto\">CLI Options</H4> <div><table> <thead> <tr> <th>Option</th> <th>Alias</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>--output &lt;file&gt;</code></td> <td><code>-o</code></td> <td>Write output to a file instead of stdout</td> </tr> <tr> <td><code>--markdown</code></td> <td><code>-m</code></td> <td>Convert content to markdown format</td> </tr> <tr> <td><code>--md</code></td> <td></td> <td>Alias for <code>--markdown</code></td> </tr> <tr> <td><code>--json</code></td> <td><code>-j</code></td> <td>Output as JSON with metadata and content</td> </tr> <tr> <td><code>--frontmatter</code></td> <td><code>-f</code></td> <td>Prepend YAML frontmatter (title, author, source, etc.) to the output</td> </tr> <tr> <td><code>--property &lt;name&gt;</code></td> <td><code>-p</code></td> <td>Extract a specific property (e.g., title, description, domain)</td> </tr> <tr> <td><code>--debug</code></td> <td></td> <td>Enable debug mode</td> </tr> <tr> <td><code>--lang &lt;code&gt;</code></td> <td><code>-l</code></td> <td>Preferred language (BCP 47, e.g. <code>en</code>, <code>fr</code>, <code>ja</code>)</td> </tr> <tr> <td><code>--user-agent &lt;string&gt;</code></td> <td><code>-u</code></td> <td>Custom <code>User-Agent</code> header for HTTP requests (helps with 403/FORBIDDEN responses)</td> </tr> </tbody> </table></div> <p dir=\"auto\">When no <code>&lt;source&gt;</code> argument is provided, <code>defuddle parse</code> reads HTML from stdin. You can also pass <code>-</code> explicitly to force stdin input.</p> <H2 dir=\"auto\">Installation</H2> <pre><code class=\"language-bash\" data-lang=\"bash\">npm install defuddle</code></pre> <p dir=\"auto\">For Node.js usage, install a DOM implementation:</p> <pre><code class=\"language-bash\" data-lang=\"bash\">npm install linkedom</code></pre> <p dir=\"auto\">Or use JSDOM:</p> <pre><code class=\"language-bash\" data-lang=\"bash\">npm install jsdom</code></pre> <H3 dir=\"auto\">CLI installation</H3> <p dir=\"auto\">To use the <code>defuddle</code> command globally, install it with the <code>-g</code> flag:</p> <pre><code class=\"language-bash\" data-lang=\"bash\">npm install -g defuddle</code></pre> <p dir=\"auto\">Or use <code>npx</code> to run the CLI without installing globally:</p> <pre><code class=\"language-bash\" data-lang=\"bash\">npx defuddle parse https://example.com/article</code></pre> <H2 dir=\"auto\">Response</H2> <p dir=\"auto\">Defuddle returns an object with the following properties:</p> <div><table> <thead> <tr> <th>Property</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>author</code></td> <td>string</td> <td>Author of the article</td> </tr> <tr> <td><code>content</code></td> <td>string</td> <td>Cleaned up string of the extracted content</td> </tr> <tr> <td><code>description</code></td> <td>string</td> <td>Description or summary of the article</td> </tr> <tr> <td><code>domain</code></td> <td>string</td> <td>Domain name of the website</td> </tr> <tr> <td><code>favicon</code></td> <td>string</td> <td>URL of the website's favicon</td> </tr> <tr> <td><code>image</code></td> <td>string</td> <td>URL of the article's main image</td> </tr> <tr> <td><code>language</code></td> <td>string</td> <td>Language of the page in <a href=\"https://www.rfc-editor.org/info/bcp47\">BCP 47</a> format (e.g. <code>en</code>, <code>en-US</code>)</td> </tr> <tr> <td><code>metaTags</code></td> <td>object</td> <td>Meta tags</td> </tr> <tr> <td><code>parseTime</code></td> <td>number</td> <td>Time taken to parse the page in milliseconds</td> </tr> <tr> <td><code>published</code></td> <td>string</td> <td>Publication date of the article</td> </tr> <tr> <td><code>site</code></td> <td>string</td> <td>Name of the website</td> </tr> <tr> <td><code>schemaOrgData</code></td> <td>object</td> <td>Raw schema.org data extracted from the page</td> </tr> <tr> <td><code>title</code></td> <td>string</td> <td>Title of the article</td> </tr> <tr> <td><code>wordCount</code></td> <td>number</td> <td>Total number of words in the extracted content</td> </tr> <tr> <td><code>debug</code></td> <td>object</td> <td>Debug info including content selector and removals (when <code>debug: true</code>)</td> </tr> </tbody> </table></div> <H2 dir=\"auto\">Bundles</H2> <p dir=\"auto\">Defuddle is available in three different bundles:</p> <ol dir=\"auto\"> <li>Core bundle (<code>defuddle</code>): The main bundle for browser usage. No dependencies.</li> <li>Full bundle (<code>defuddle/full</code>): Includes additional features for math equation parsing and Markdown conversion.</li> <li>Node.js bundle (<code>defuddle/node</code>): For Node.js environments. Accepts any DOM <code>Document</code> (e.g. from linkedom, JSDOM, or happy-dom). Includes full capabilities for math and Markdown conversion.</li> </ol> <p dir=\"auto\">The core bundle is recommended for most use cases. It still handles math content, but doesn't include fallbacks for converting between MathML and LaTeX formats. The full bundle adds the ability to create reliable <code>&lt;math&gt;</code> elements using <code>mathml-to-latex</code> and <code>temml</code> libraries.</p> <H2 dir=\"auto\">Options</H2> <div><table> <thead> <tr> <th>Option</th> <th>Type</th> <th>Default</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>debug</code></td> <td>boolean</td> <td>false</td> <td>Enable debug logging and return debug info in the response</td> </tr> <tr> <td><code>url</code></td> <td>string</td> <td></td> <td>URL of the page being parsed</td> </tr> <tr> <td><code>markdown</code></td> <td>boolean</td> <td>false</td> <td>Convert <code>content</code> to Markdown</td> </tr> <tr> <td><code>separateMarkdown</code></td> <td>boolean</td> <td>false</td> <td>Keep <code>content</code> as HTML and return <code>contentMarkdown</code> as Markdown</td> </tr> <tr> <td><code>removeExactSelectors</code></td> <td>boolean</td> <td>true</td> <td>Remove elements matching exact selectors like ads, social buttons, etc.</td> </tr> <tr> <td><code>removePartialSelectors</code></td> <td>boolean</td> <td>true</td> <td>Remove elements matching partial selectors like ads, social buttons, etc.</td> </tr> <tr> <td><code>removeHiddenElements</code></td> <td>boolean</td> <td>true</td> <td>Remove elements hidden via CSS (display:none, visibility:hidden, etc.)</td> </tr> <tr> <td><code>removeLowScoring</code></td> <td>boolean</td> <td>true</td> <td>Remove non-content blocks by scoring (navigation, link lists, etc.)</td> </tr> <tr> <td><code>removeSmallImages</code></td> <td>boolean</td> <td>true</td> <td>Remove small images (icons, tracking pixels, etc.)</td> </tr> <tr> <td><code>removeImages</code></td> <td>boolean</td> <td>false</td> <td>Remove images.</td> </tr> <tr> <td><code>standardize</code></td> <td>boolean</td> <td>true</td> <td>Standardize HTML (footnotes, headings, code blocks, etc.)</td> </tr> <tr> <td><code>contentSelector</code></td> <td>string</td> <td></td> <td>CSS selector to use as the main content element, bypassing auto-detection</td> </tr> <tr> <td><code>useAsync</code></td> <td>boolean</td> <td>true</td> <td>Allow async extractors to fetch from third-party APIs when no local content is available.</td> </tr> <tr> <td><code>language</code></td> <td>string</td> <td></td> <td>Preferred language (BCP 47 tag, e.g. <code>en</code>, <code>fr</code>). Sets <code>Accept-Language</code> header and selects transcript language.</td> </tr> <tr> <td><code>includeReplies</code></td> <td>boolean | 'extractors'</td> <td>'extractors'</td> <td>Include replies: <code>'extractors'</code> for site-specific extractors only, <code>true</code> for all, <code>false</code> for none.</td> </tr> </tbody> </table></div> <H2 dir=\"auto\">HTML standardization</H2> <p dir=\"auto\">Defuddle attempts to standardize HTML elements to provide a consistent input for subsequent manipulation such as conversion to Markdown.</p> <H3 dir=\"auto\">Headings</H3> <ul dir=\"auto\"> <li>The first H1 or H2 heading is removed if it matches the title.</li> <li>H1s are converted to H2s.</li> <li>Anchor links in H1 to H6 elements are removed and become plain headings.</li> </ul> <H3 dir=\"auto\">Code blocks</H3> <p dir=\"auto\">Code block are standardized. If present, line numbers and syntax highlighting are removed, but the language is retained and added as a data attribute and class.</p> <pre><code>&lt;pre&gt;\n  &lt;code data-lang=\"js\" class=\"language-js\"&gt;\n    // code\n  &lt;/code&gt;\n&lt;/pre&gt;</code></pre> <H3 dir=\"auto\">Footnotes</H3> <p dir=\"auto\">Inline references and footnotes are converted to a standard format:</p> <pre><code>Inline reference&lt;sup id=\"fnref:1\"&gt;&lt;a href=\"#fn:1\"&gt;1&lt;/a&gt;&lt;/sup&gt;.\n\n&lt;div id=\"footnotes\"&gt;\n  &lt;ol&gt;\n    &lt;li class=\"footnote\" id=\"fn:1\"&gt;\n      &lt;p&gt;\n        Footnote content.&amp;nbsp;&lt;a href=\"#fnref:1\" class=\"footnote-backref\"&gt;↩&lt;/a&gt;\n      &lt;/p&gt;\n    &lt;/li&gt;\n    &lt;/ol&gt;\n&lt;/div&gt;</code></pre> <H3 dir=\"auto\">Math</H3> <p dir=\"auto\">Math elements, including MathJax and KaTeX, are converted to standard MathML:</p> <pre><code>&lt;math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\" data-latex=\"a \\neq 0\"&gt;\n  &lt;mi&gt;a&lt;/mi&gt;\n  &lt;mo&gt;≠&lt;/mo&gt;\n  &lt;mn&gt;0&lt;/mn&gt;\n&lt;/math&gt;</code></pre> <H3 dir=\"auto\">Callouts</H3> <p dir=\"auto\">Callout and alert elements from various sources are standardized to blockquotes with a <code>data-callout</code> attribute. When converting to Markdown, these become <a href=\"https://help.obsidian.md/Editing+and+formatting/Callouts\">Obsidian-style callouts</a>.</p> <p dir=\"auto\">Supported sources:</p> <ul dir=\"auto\"> <li>GitHub markdown alerts (<code>div.markdown-alert</code>)</li> <li>Obsidian Publish callouts (<code>div.callout[data-callout]</code>)</li> <li>Callout asides (<code>aside.callout-*</code>)</li> <li>Bootstrap alerts (<code>div.alert.alert-*</code>)</li> </ul> <p dir=\"auto\">The standardized HTML follows the <a href=\"https://help.obsidian.md/Editing+and+formatting/Callouts\">Obsidian Publish</a> format:</p> <pre><code>&lt;div data-callout=\"info\" class=\"callout\"&gt;\n  &lt;div class=\"callout-title\"&gt;\n    &lt;div class=\"callout-title-inner\"&gt;Info&lt;/div&gt;\n  &lt;/div&gt;\n  &lt;div class=\"callout-content\"&gt;\n    &lt;p&gt;This is an informational callout.&lt;/p&gt;\n  &lt;/div&gt;\n&lt;/div&gt;</code></pre> <p dir=\"auto\">In Markdown:</p> <pre><code class=\"language-markdown\" data-lang=\"markdown\">&gt; [!info] Info\n&gt; This is an informational callout.</code></pre> <H2 dir=\"auto\">Development</H2> <H3 dir=\"auto\">Build</H3> <p dir=\"auto\">To build the package, you'll need Node.js and npm installed. Then run:</p> <pre><code class=\"language-bash\" data-lang=\"bash\"># Install dependencies\nnpm install\n\n# Clean and build\nnpm run build</code></pre> <H2 dir=\"auto\">Third-party services</H2> <p dir=\"auto\">When using <code>parseAsync()</code>, if no content can be extracted from the local HTML, Defuddle may fetch content from third-party APIs as a fallback. This only happens when the page HTML contains no usable content (e.g. client-side rendered SPAs). You can disable this by setting <code>useAsync: false</code> in options.</p> <ul dir=\"auto\"> <li><a href=\"https://github.com/FixTweet/FxTwitter\">FxTwitter API</a> — Used to extract X (Twitter) article content, which is not available in server-rendered HTML.</li> </ul> <H2 dir=\"auto\">Debugging</H2> <H3 dir=\"auto\">Debug mode</H3> <p dir=\"auto\">You can enable debug mode by passing an options object when creating a new Defuddle instance:</p> <pre><code class=\"language-typescript\" data-lang=\"typescript\">const result = new Defuddle(document, { debug: true }).parse();\n\n// Access debug info\nconsole.log(result.debug.contentSelector); // CSS selector path of chosen main content element\nconsole.log(result.debug.removals);        // Array of removed elements with reasons</code></pre> <p dir=\"auto\">When debug mode is enabled:</p> <ul dir=\"auto\"> <li>Returns a <code>debug</code> field in the response with detailed information about content extraction</li> <li>More verbose console logging about the parsing process</li> <li>Preserves HTML class and id attributes that are normally stripped</li> <li>Retains all data-* attributes</li> <li>Skips div flattening to preserve document structure</li> </ul> <p dir=\"auto\">The <code>debug</code> field contains:</p> <div><table> <thead> <tr> <th>Property</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>contentSelector</code></td> <td>string</td> <td>CSS selector path of the chosen main content element</td> </tr> <tr> <td><code>removals</code></td> <td>array</td> <td>List of elements removed during processing</td> </tr> </tbody> </table></div> <p dir=\"auto\">Each removal entry contains:</p> <div><table> <thead> <tr> <th>Property</th> <th>Type</th> <th>Description</th> </tr> </thead> <tbody> <tr> <td><code>step</code></td> <td>string</td> <td>Pipeline step that removed the element (e.g. <code>removeLowScoring</code>, <code>removeBySelector</code>, <code>removeHiddenElements</code>)</td> </tr> <tr> <td><code>selector</code></td> <td>string</td> <td>CSS selector or pattern that matched (for selector-based removal)</td> </tr> <tr> <td><code>reason</code></td> <td>string</td> <td>Why the element was removed (e.g. <code>score: -20</code>, <code>display:none</code>)</td> </tr> <tr> <td><code>text</code></td> <td>string</td> <td>First 200 characters of the removed element's text content</td> </tr> </tbody> </table></div> <H3 dir=\"auto\">Pipeline toggles</H3> <p dir=\"auto\">You can disable individual pipeline steps to diagnose content extraction issues:</p> <pre><code class=\"language-typescript\" data-lang=\"typescript\">// Skip content scoring to see if it's removing content incorrectly\nconst result = new Defuddle(document, { removeLowScoring: false }).parse();\n\n// Skip hidden element removal (useful for CSS sidenote layouts)\nconst result = new Defuddle(document, { removeHiddenElements: false }).parse();\n\n// Skip small image removal\nconst result = new Defuddle(document, { removeSmallImages: false }).parse();</code></pre> <H3 dir=\"auto\">Content selector</H3> <p dir=\"auto\">Use <code>contentSelector</code> to bypass Defuddle's auto-detection and specify the main content element directly:</p> <pre><code class=\"language-typescript\" data-lang=\"typescript\">const result = new Defuddle(document, {\n  contentSelector: 'article.post-content'\n}).parse();</code></pre> <p dir=\"auto\">If the selector doesn't match any element, Defuddle falls back to auto-detection.</p> </article>",
+  "title": "kepano/defuddle: Get the main content of any page as Markdown.",
+  "description": "Get the main content of any page as Markdown. Contribute to kepano/defuddle development by creating an account on GitHub.",
+  "domain": "github.com",
+  "favicon": "https://github.githubassets.com/favicons/favicon.svg",
+  "image": "https://opengraph.githubassets.com/d4fcde1c4b01a0daa8d3b28c102898d6500ce51eb57eae717e77ac45efde24a9/kepano/defuddle",
+  "language": "en",
+  "metaTags": [
+    {
+      "name": "route-pattern",
+      "property": null,
+      "content": "/:user_id/:repository"
+    },
+    {
+      "name": "route-controller",
+      "property": null,
+      "content": "files"
+    },
+    {
+      "name": "route-action",
+      "property": null,
+      "content": "disambiguate"
+    },
+    {
+      "name": "fetch-nonce",
+      "property": null,
+      "content": "v2:f3ddfa18-030e-ce71-62cb-e13dc1bccac1"
+    },
+    {
+      "name": "current-catalog-service-hash",
+      "property": null,
+      "content": "f3abb0cc802f3d7b95fc8762b94bdcb13bf39634c40c357301c4aa1d67a256fb"
+    },
+    {
+      "name": "request-id",
+      "property": null,
+      "content": "D157:14AC0B:37EA461:50126F8:6A428D62"
+    },
+    {
+      "name": "html-safe-nonce",
+      "property": null,
+      "content": "7c95072559a426e03fb2a0c3ec47d5757a86ea262e4b6d9c9515a4bd148d604d"
+    },
+    {
+      "name": "visitor-payload",
+      "property": null,
+      "content": "eyJyZWZlcnJlciI6IiIsInJlcXVlc3RfaWQiOiJEMTU3OjE0QUMwQjozN0VBNDYxOjUwMTI2Rjg6NkE0MjhENjIiLCJ2aXNpdG9yX2lkIjoiMjExNzQ1NzU1MDU5NjI3OTY1MCIsInJlZ2lvbl9lZGdlIjoiaWFkIiwicmVnaW9uX3JlbmRlciI6ImlhZCJ9"
+    },
+    {
+      "name": "visitor-hmac",
+      "property": null,
+      "content": "44cbcc92b65d3adab18711e2c6fd576fc915b428203be6536cf96af023952b7d"
+    },
+    {
+      "name": "hovercard-subject-tag",
+      "property": null,
+      "content": "repository:940076402"
+    },
+    {
+      "name": "github-keyboard-shortcuts",
+      "property": null,
+      "content": "repository,copilot"
+    },
+    {
+      "name": "google-site-verification",
+      "property": null,
+      "content": "Apib7-x98H0j5cPqHWwSMm6dNU4GmODRoqxLiDzdx9I"
+    },
+    {
+      "name": "octolytics-url",
+      "property": null,
+      "content": "https://collector.github.com/github/collect"
+    },
+    {
+      "name": "analytics-location",
+      "property": null,
+      "content": "/<user-name>/<repo-name>"
+    },
+    {
+      "name": "viewport",
+      "property": null,
+      "content": "width=device-width"
+    },
+    {
+      "name": "description",
+      "property": null,
+      "content": "Get the main content of any page as Markdown. Contribute to kepano/defuddle development by creating an account on GitHub."
+    },
+    {
+      "name": null,
+      "property": "fb:app_id",
+      "content": "1401488693436528"
+    },
+    {
+      "name": "apple-itunes-app",
+      "property": null,
+      "content": "app-id=1477376905, app-argument=https://github.com/kepano/defuddle"
+    },
+    {
+      "name": "twitter:image",
+      "property": null,
+      "content": "https://opengraph.githubassets.com/d4fcde1c4b01a0daa8d3b28c102898d6500ce51eb57eae717e77ac45efde24a9/kepano/defuddle"
+    },
+    {
+      "name": "twitter:site",
+      "property": null,
+      "content": "@github"
+    },
+    {
+      "name": "twitter:card",
+      "property": null,
+      "content": "summary_large_image"
+    },
+    {
+      "name": "twitter:title",
+      "property": null,
+      "content": "GitHub - kepano/defuddle: Get the main content of any page as Markdown."
+    },
+    {
+      "name": "twitter:description",
+      "property": null,
+      "content": "Get the main content of any page as Markdown. Contribute to kepano/defuddle development by creating an account on GitHub."
+    },
+    {
+      "name": null,
+      "property": "og:image",
+      "content": "https://opengraph.githubassets.com/d4fcde1c4b01a0daa8d3b28c102898d6500ce51eb57eae717e77ac45efde24a9/kepano/defuddle"
+    },
+    {
+      "name": null,
+      "property": "og:image:alt",
+      "content": "Get the main content of any page as Markdown. Contribute to kepano/defuddle development by creating an account on GitHub."
+    },
+    {
+      "name": null,
+      "property": "og:image:width",
+      "content": "1200"
+    },
+    {
+      "name": null,
+      "property": "og:image:height",
+      "content": "600"
+    },
+    {
+      "name": null,
+      "property": "og:site_name",
+      "content": "GitHub"
+    },
+    {
+      "name": null,
+      "property": "og:type",
+      "content": "object"
+    },
+    {
+      "name": null,
+      "property": "og:title",
+      "content": "GitHub - kepano/defuddle: Get the main content of any page as Markdown."
+    },
+    {
+      "name": null,
+      "property": "og:url",
+      "content": "https://github.com/kepano/defuddle"
+    },
+    {
+      "name": null,
+      "property": "og:description",
+      "content": "Get the main content of any page as Markdown. Contribute to kepano/defuddle development by creating an account on GitHub."
+    },
+    {
+      "name": "hostname",
+      "property": null,
+      "content": "github.com"
+    },
+    {
+      "name": "expected-hostname",
+      "property": null,
+      "content": "github.com"
+    },
+    {
+      "name": null,
+      "property": null,
+      "content": "d4ddd5c742503c2b5a05c6af105c4e664904da64d151f4de84ae53d1c01b10c7"
+    },
+    {
+      "name": null,
+      "property": null,
+      "content": "cb4cffb7c023f774818cf728eb860debf1fc8ecf88a20487b238da276df1eb7d"
+    },
+    {
+      "name": null,
+      "property": null,
+      "content": "b3be1289ad742851e907dca55dc633edddbec00c3a025831d3c678234c6d5d77"
+    },
+    {
+      "name": null,
+      "property": null,
+      "content": "6aa293d947e1c16826ddd07dd68c50f9bd62c2863fe0725993beb8721456d701"
+    },
+    {
+      "name": "turbo-cache-control",
+      "property": null,
+      "content": "no-preview"
+    },
+    {
+      "name": "turbo-cache-control",
+      "property": null,
+      "content": "no-cache"
+    },
+    {
+      "name": "go-import",
+      "property": null,
+      "content": "github.com/kepano/defuddle git https://github.com/kepano/defuddle.git"
+    },
+    {
+      "name": "octolytics-dimension-user_id",
+      "property": null,
+      "content": "10565871"
+    },
+    {
+      "name": "octolytics-dimension-user_login",
+      "property": null,
+      "content": "kepano"
+    },
+    {
+      "name": "octolytics-dimension-repository_id",
+      "property": null,
+      "content": "940076402"
+    },
+    {
+      "name": "octolytics-dimension-repository_nwo",
+      "property": null,
+      "content": "kepano/defuddle"
+    },
+    {
+      "name": "octolytics-dimension-repository_public",
+      "property": null,
+      "content": "true"
+    },
+    {
+      "name": "octolytics-dimension-repository_is_fork",
+      "property": null,
+      "content": "false"
+    },
+    {
+      "name": "octolytics-dimension-repository_network_root_id",
+      "property": null,
+      "content": "940076402"
+    },
+    {
+      "name": "octolytics-dimension-repository_network_root_nwo",
+      "property": null,
+      "content": "kepano/defuddle"
+    },
+    {
+      "name": "turbo-body-classes",
+      "property": null,
+      "content": "logged-out env-production page-responsive"
+    },
+    {
+      "name": "disable-turbo",
+      "property": null,
+      "content": "false"
+    },
+    {
+      "name": "browser-stats-url",
+      "property": null,
+      "content": "https://api.github.com/_private/browser/stats"
+    },
+    {
+      "name": "browser-errors-url",
+      "property": null,
+      "content": "https://api.github.com/_private/browser/errors"
+    },
+    {
+      "name": "release",
+      "property": null,
+      "content": "9a178d9a2c0798b617dfb6cb246d48e00af98952"
+    },
+    {
+      "name": "ui-target",
+      "property": null,
+      "content": "full"
+    },
+    {
+      "name": "theme-color",
+      "property": null,
+      "content": "#1e2327"
+    },
+    {
+      "name": "color-scheme",
+      "property": null,
+      "content": "light dark"
+    }
+  ],
+  "parseTime": 670,
+  "published": "",
+  "author": "kepano",
+  "site": "GitHub",
+  "schemaOrgData": [],
+  "wordCount": 1627,
+  "contentMarkdown": "> de·fud·dle /diˈfʌdl/ *transitive verb*  \n> to remove unnecessary elements from a web page, and make it easily readable.\n\n**Beware! Defuddle is very much a work in progress!**\n\nDefuddle extracts the main content from web pages. It cleans up web pages by removing clutter like comments, sidebars, headers, footers, and other non-essential elements, leaving only the primary content.\n\n## Overview\n\nDefuddle takes a URL or HTML, finds the main content, and returns cleaned HTML or Markdown. Defuddle was created for the browser extension [Obsidian Web Clipper](https://github.com/obsidianmd/obsidian-clipper), but it is designed to run in any environment.\n\nDefuddle can be used as a replacement for [Mozilla Readability](https://github.com/mozilla/readability) with a few differences:\n\n- More forgiving, removes fewer uncertain elements.\n- Provides a consistent output for footnotes, math, code blocks, etc.\n- Uses a page's mobile styles to guess at unnecessary elements.\n- Extracts more metadata from the page, including schema.org data.\n\n## Usage\n\n### Browser\n\n```javascript\nimport Defuddle from 'defuddle';\n\n// Parse the current document\nconst defuddle = new Defuddle(document);\nconst result = defuddle.parse();\n\n// Access the content and metadata\nconsole.log(result.content);\nconsole.log(result.title);\nconsole.log(result.);\n```\n\n### Node.js\n\n`defuddle/node` accepts a DOM `Document` from any implementation (JSDOM, linkedom, happy-dom, etc.).\n\n```javascript\nimport { parseHTML } from 'linkedom';\nimport { Defuddle } from 'defuddle/node';\n\nconst { document } = parseHTML(html);\nconst result = await Defuddle(document, 'https://example.com/article', {\n  markdown: true\n});\n\nconsole.log(result.content);\nconsole.log(result.title);\nconsole.log(result.);\n```\n\nOr with JSDOM:\n\n```javascript\nimport { JSDOM } from 'jsdom';\nimport { Defuddle } from 'defuddle/node';\n\nconst dom = new JSDOM(html, { url: 'https://example.com/article' });\nconst result = await Defuddle(dom.window.document, 'https://example.com/article');\n```\n\n*Note: for `defuddle/node` to import properly, the module format in your `package.json` has to be set to `{ \"type\": \"module\" }`*\n\n### CLI\n\nDefuddle includes a command-line interface for parsing web pages directly from the terminal. You can run it with `npx` or [install it globally](#cli-installation). The CLI accepts a file path, a URL, or HTML piped over stdin.\n\n```bash\n# Parse a local HTML file\nnpx defuddle parse page.html\n\n# Parse a URL\nnpx defuddle parse https://example.com/article\n\n# Parse HTML from stdin\ncat page.html | npx defuddle parse\n\n# Parse fetched HTML from stdin as markdown\ncurl -L https://stephango.com/saw | npx defuddle parse --markdown\n\n# Output as markdown\nnpx defuddle parse page.html --markdown\n\n# Output as JSON with metadata\nnpx defuddle parse page.html --json\n\n# Extract a specific property\nnpx defuddle parse page.html --property title\n\n# Save output to a file\nnpx defuddle parse page.html --output result.html\n\n# Enable debug mode\nnpx defuddle parse page.html --debug\n\n# Use a custom User-Agent (helps with sites that return 403 to the default UA)\nnpx defuddle parse https://example.com/article --user-agent \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15\"\n```\n\n#### CLI Options\n\n| Option | Alias | Description |\n| --- | --- | --- |\n| `--output <file>` | `-o` | Write output to a file instead of stdout |\n| `--markdown` | `-m` | Convert content to markdown format |\n| `--md` |  | Alias for `--markdown` |\n| `--json` | `-j` | Output as JSON with metadata and content |\n| `--frontmatter` | `-f` | Prepend YAML frontmatter (title, author, source, etc.) to the output |\n| `--property <name>` | `-p` | Extract a specific property (e.g., title, description, domain) |\n| `--debug` |  | Enable debug mode |\n| `--lang <code>` | `-l` | Preferred language (BCP 47, e.g. `en`, `fr`, `ja`) |\n| `--user-agent <string>` | `-u` | Custom `User-Agent` header for HTTP requests (helps with 403/FORBIDDEN responses) |\n\nWhen no `<source>` argument is provided, `defuddle parse` reads HTML from stdin. You can also pass `-` explicitly to force stdin input.\n\n## Installation\n\n```bash\nnpm install defuddle\n```\n\nFor Node.js usage, install a DOM implementation:\n\n```bash\nnpm install linkedom\n```\n\nOr use JSDOM:\n\n```bash\nnpm install jsdom\n```\n\n### CLI installation\n\nTo use the `defuddle` command globally, install it with the `-g` flag:\n\n```bash\nnpm install -g defuddle\n```\n\nOr use `npx` to run the CLI without installing globally:\n\n```bash\nnpx defuddle parse https://example.com/article\n```\n\n## Response\n\nDefuddle returns an object with the following properties:\n\n| Property | Type | Description |\n| --- | --- | --- |\n| `author` | string | Author of the article |\n| `content` | string | Cleaned up string of the extracted content |\n| `description` | string | Description or summary of the article |\n| `domain` | string | Domain name of the website |\n| `favicon` | string | URL of the website's favicon |\n| `image` | string | URL of the article's main image |\n| `language` | string | Language of the page in [BCP 47](https://www.rfc-editor.org/info/bcp47) format (e.g. `en`, `en-US`) |\n| `metaTags` | object | Meta tags |\n| `parseTime` | number | Time taken to parse the page in milliseconds |\n| `published` | string | Publication date of the article |\n| `site` | string | Name of the website |\n| `schemaOrgData` | object | Raw schema.org data extracted from the page |\n| `title` | string | Title of the article |\n| `wordCount` | number | Total number of words in the extracted content |\n| `debug` | object | Debug info including content selector and removals (when `debug: true`) |\n\n## Bundles\n\nDefuddle is available in three different bundles:\n\n1. Core bundle (`defuddle`): The main bundle for browser usage. No dependencies.\n2. Full bundle (`defuddle/full`): Includes additional features for math equation parsing and Markdown conversion.\n3. Node.js bundle (`defuddle/node`): For Node.js environments. Accepts any DOM `Document` (e.g. from linkedom, JSDOM, or happy-dom). Includes full capabilities for math and Markdown conversion.\n\nThe core bundle is recommended for most use cases. It still handles math content, but doesn't include fallbacks for converting between MathML and LaTeX formats. The full bundle adds the ability to create reliable `<math>` elements using `mathml-to-latex` and `temml` libraries.\n\n## Options\n\n| Option | Type | Default | Description |\n| --- | --- | --- | --- |\n| `debug` | boolean | false | Enable debug logging and return debug info in the response |\n| `url` | string |  | URL of the page being parsed |\n| `markdown` | boolean | false | Convert `content` to Markdown |\n| `separateMarkdown` | boolean | false | Keep `content` as HTML and return `contentMarkdown` as Markdown |\n| `removeExactSelectors` | boolean | true | Remove elements matching exact selectors like ads, social buttons, etc. |\n| `removePartialSelectors` | boolean | true | Remove elements matching partial selectors like ads, social buttons, etc. |\n| `removeHiddenElements` | boolean | true | Remove elements hidden via CSS (display:none, visibility:hidden, etc.) |\n| `removeLowScoring` | boolean | true | Remove non-content blocks by scoring (navigation, link lists, etc.) |\n| `removeSmallImages` | boolean | true | Remove small images (icons, tracking pixels, etc.) |\n| `removeImages` | boolean | false | Remove images. |\n| `standardize` | boolean | true | Standardize HTML (footnotes, headings, code blocks, etc.) |\n| `contentSelector` | string |  | CSS selector to use as the main content element, bypassing auto-detection |\n| `useAsync` | boolean | true | Allow async extractors to fetch from third-party APIs when no local content is available. |\n| `language` | string |  | Preferred language (BCP 47 tag, e.g. `en`, `fr`). Sets `Accept-Language` header and selects transcript language. |\n| `includeReplies` | boolean \\| 'extractors' | 'extractors' | Include replies: `'extractors'` for site-specific extractors only, `true` for all, `false` for none. |\n\n## HTML standardization\n\nDefuddle attempts to standardize HTML elements to provide a consistent input for subsequent manipulation such as conversion to Markdown.\n\n### Headings\n\n- The first H1 or H2 heading is removed if it matches the title.\n- H1s are converted to H2s.\n- Anchor links in H1 to H6 elements are removed and become plain headings.\n\n### Code blocks\n\nCode block are standardized. If present, line numbers and syntax highlighting are removed, but the language is retained and added as a data attribute and class.\n\n```\n<pre>\n  <code data-lang=\"js\" class=\"language-js\">\n    // code\n  </code>\n</pre>\n```\n\n### Footnotes\n\nInline references and footnotes are converted to a standard format:\n\n```\nInline reference<sup id=\"fnref:1\"><a href=\"#fn:1\">1</a></sup>.\n\n<div id=\"footnotes\">\n  <ol>\n    <li class=\"footnote\" id=\"fn:1\">\n      <p>\n        Footnote content.&nbsp;<a href=\"#fnref:1\" class=\"footnote-backref\">↩</a>\n      </p>\n    </li>\n    </ol>\n</div>\n```\n\n### Math\n\nMath elements, including MathJax and KaTeX, are converted to standard MathML:\n\n```\n<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"inline\" data-latex=\"a \\neq 0\">\n  <mi>a</mi>\n  <mo>≠</mo>\n  <mn>0</mn>\n</math>\n```\n\n### Callouts\n\nCallout and alert elements from various sources are standardized to blockquotes with a `data-callout` attribute. When converting to Markdown, these become [Obsidian-style callouts](https://help.obsidian.md/Editing+and+formatting/Callouts).\n\nSupported sources:\n\n- GitHub markdown alerts (`div.markdown-alert`)\n- Obsidian Publish callouts (`div.callout[data-callout]`)\n- Callout asides (`aside.callout-*`)\n- Bootstrap alerts (`div.alert.alert-*`)\n\nThe standardized HTML follows the [Obsidian Publish](https://help.obsidian.md/Editing+and+formatting/Callouts) format:\n\n```\n<div data-callout=\"info\" class=\"callout\">\n  <div class=\"callout-title\">\n    <div class=\"callout-title-inner\">Info</div>\n  </div>\n  <div class=\"callout-content\">\n    <p>This is an informational callout.</p>\n  </div>\n</div>\n```\n\nIn Markdown:\n\n```markdown\n> [!info] Info\n> This is an informational callout.\n```\n\n## Development\n\n### Build\n\nTo build the package, you'll need Node.js and npm installed. Then run:\n\n```bash\n# Install dependencies\nnpm install\n\n# Clean and build\nnpm run build\n```\n\n## Third-party services\n\nWhen using `parseAsync()`, if no content can be extracted from the local HTML, Defuddle may fetch content from third-party APIs as a fallback. This only happens when the page HTML contains no usable content (e.g. client-side rendered SPAs). You can disable this by setting `useAsync: false` in options.\n\n- [FxTwitter API](https://github.com/FixTweet/FxTwitter) — Used to extract X (Twitter) article content, which is not available in server-rendered HTML.\n\n## Debugging\n\n### Debug mode\n\nYou can enable debug mode by passing an options object when creating a new Defuddle instance:\n\n```typescript\nconst result = new Defuddle(document, { debug: true }).parse();\n\n// Access debug info\nconsole.log(result.debug.contentSelector); // CSS selector path of chosen main content element\nconsole.log(result.debug.removals);        // Array of removed elements with reasons\n```\n\nWhen debug mode is enabled:\n\n- Returns a `debug` field in the response with detailed information about content extraction\n- More verbose console logging about the parsing process\n- Preserves HTML class and id attributes that are normally stripped\n- Retains all data-\\* attributes\n- Skips div flattening to preserve document structure\n\nThe `debug` field contains:\n\n| Property | Type | Description |\n| --- | --- | --- |\n| `contentSelector` | string | CSS selector path of the chosen main content element |\n| `removals` | array | List of elements removed during processing |\n\nEach removal entry contains:\n\n| Property | Type | Description |\n| --- | --- | --- |\n| `step` | string | Pipeline step that removed the element (e.g. `removeLowScoring`, `removeBySelector`, `removeHiddenElements`) |\n| `selector` | string | CSS selector or pattern that matched (for selector-based removal) |\n| `reason` | string | Why the element was removed (e.g. `score: -20`, `display:none`) |\n| `text` | string | First 200 characters of the removed element's text content |\n\n### Pipeline toggles\n\nYou can disable individual pipeline steps to diagnose content extraction issues:\n\n```typescript\n// Skip content scoring to see if it's removing content incorrectly\nconst result = new Defuddle(document, { removeLowScoring: false }).parse();\n\n// Skip hidden element removal (useful for CSS sidenote layouts)\nconst result = new Defuddle(document, { removeHiddenElements: false }).parse();\n\n// Skip small image removal\nconst result = new Defuddle(document, { removeSmallImages: false }).parse();\n```\n\n### Content selector\n\nUse `contentSelector` to bypass Defuddle's auto-detection and specify the main content element directly:\n\n```typescript\nconst result = new Defuddle(document, {\n  contentSelector: 'article.post-content'\n}).parse();\n```\n\nIf the selector doesn't match any element, Defuddle falls back to auto-detection."
+}

@@ -1,0 +1,30 @@
+{
+  "name": "keyscan-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI keyword density analyzer — extract scored keywords from HTML",
+  "main": "src/cli.ts",
+  "exports": {
+    ".": "./src/cli.ts"
+  },
+  "bin": {
+    "keyscan": "tsx src/cli.ts"
+  },
+  "scripts": {
+    "start:dev": "tsx src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "defuddle": "^0.19.0",
+    "jsdom": "^26.0.0"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
