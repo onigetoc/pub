@@ -35,7 +35,7 @@ Multi-file structure in `src/`: elements (types, stopwords, entities), fetcher, 
 | `-m` / `--markdown` | Markdown body (from defuddle) |
 | `-f` / `--frontmatter` | Full .md (YAML frontmatter + body) |
 
-## Dependencies
+## Dependencies  
 
 - Runtime: `defuddle`, `linkedom`
 - Dev: `typescript`, `tsx`, `vitest`, `@types/node`
